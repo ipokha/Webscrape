@@ -8,52 +8,50 @@ import csv
 def get_page(url,params=None):
     page = session.get(url,params=params,verify=False).content
     return page
+
 def get_bsobj(page):
     bsobj = soup(page,"lxml")
     return bsobj
+
 def get_divs(bsobj):
     all_divs = bsobj.find_all("div",attrs={"class":"list-grid-item"})
     if all_divs != []:
         return all_divs
     else:
         return None
-def get_event_title(div):
 
+def get_event_title(div):
     title_pattern = re.compile("list-title")
     title = div.find("h3",attrs={"class",title_pattern})
     event_title = None
     event_url   = None
-
     try:
         event_title = title.text.strip()
     except Exception:
         pass
-
     try:
         event_url = base_url+title.a["href"]
     except Exception:
         pass
 
     return event_title,event_url
+
 def get_event_place(div):
     place_pattern = re.compile("serif")
     place = div.find("p",attrs={"class",place_pattern})
-
     place_name = None
     place_url  = None
-
     try:
         place_name = place.text.strip()
     except Exception:
         pass
-
     try:
         place_url_href = place.a["href"]
         place_url = (base_url + place_url_href).strip()
-
     except Exception:
         pass
     return place_name, place_url
+
 def get_event_location(div):
     location = div.find("p", attrs = {"class":"styled"})
     location_name = None
@@ -62,6 +60,7 @@ def get_event_location(div):
     except Exception:
         pass
     return location_name
+
 def get_event_date(div):
     date = div.find("div", attrs = {"class":"list-info"})
     date_text = None
@@ -69,8 +68,8 @@ def get_event_date(div):
         date_text = date.text.replace("Date:","").strip()
     except Exception:
         pass
-
     return date_text
+
 def get_event_time(div):
     time  = div.find("div", attrs = {"class":"list-info mb-2"})
     time_text = None
@@ -91,12 +90,14 @@ def collect_info(div):
         pass
     else:
         return info_list
+
 def get_str_dates(additional_days):
     today = datetime.datetime.today()
     end_date = today+datetime.timedelta(days=additional_days)
     today_str = today.strftime("%m/%d/%Y")
     end_date_str = end_date.strftime("%m/%d/%Y")
     return today_str, end_date_str
+
 def write_to_csv(event_list, output_name = "output.csv"):
     headers = ["Event_Title","Event_url","Place_name","Place_url","Location","event_date",
     "Event_time"]
@@ -105,6 +106,7 @@ def write_to_csv(event_list, output_name = "output.csv"):
     with open(output_name,"w") as f:
         writer = csv.writer(f)
         writer.writerows(final_list)
+
 def main():
     url = "https://www.visitindy.com/indianapolis-things-to-do-events"
     global base_url
@@ -115,6 +117,7 @@ def main():
     session = requests.session()
     bsobj = get_bsobj(session.get(url).content)
     pages_to_navigate = 20
+
     for page_num in range(pages_to_navigate):
         values = {
         "authenticity_token": bsobj.find(attrs={"name":"authenticity_token"})["value"],
@@ -123,18 +126,20 @@ def main():
         "search_sort": "date_sort",
         "page" :page_num + 1
         }
+
         page = session.post(url,data=values,verify=False).content
         bsobj = get_bsobj(page)
         divs = get_divs(bsobj)
+
         if divs is not None:
             for i in divs:
                 info = collect_info(i)
                 if info is not None:
                     all_events.append(info)
+
         write_to_csv(all_events)
 
 if __name__ == "__main__":
-
     #default start and end dates (today + 14 days from now)
     start_date,end_date = get_str_dates(14)
 
