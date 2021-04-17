@@ -50,7 +50,6 @@ def get_event_place(div):
     with class name that contains serif in it, get name of place and url of place
     website from this tag and return it"""
 
-    
     place_pattern = re.compile("serif")
     place = div.find("p",attrs={"class",place_pattern})
     place_name = None
@@ -153,7 +152,7 @@ def main():
     bsobj = get_bsobj(session.get(url).content)
 
     #number of pages to navigate in the website
-    pages_to_navigate = 10
+    pages_to_navigate = num_pages
 
     for page_num in range(pages_to_navigate):
         values = {
@@ -183,7 +182,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Takes the start date and end date")
     parser.add_argument("-sd","--startdate", type = str, help = "start date in mm/dd/yyyy format",default = start_date)
     parser.add_argument("-ed","--enddate",type = str, help = "end date in mm/dd/yyyy format",default = end_date)
+    parser.add_argument("-pg","--pages",type=int,help = "number of pages to scrape from website", default = 10)
     args = parser.parse_args()
     start_date = args.startdate
     end_date   = args.enddate
+    num_pages  = args.pages
     main()
