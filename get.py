@@ -39,7 +39,11 @@ def get_event_title(div):
     except Exception:
         pass
     try:
-        event_url = base_url+title.a["href"]
+        href = title.a["href"]
+        if href.startswith("https"):
+            event_url = href
+        else:
+            event_url = base_url+title.a["href"]
     except Exception:
         pass
 
@@ -163,8 +167,11 @@ def main():
         "page" :page_num + 1
         }
 
-        page = session.post(url,data=values,verify=False).content
-        bsobj = get_bsobj(page)
+        page = session.post(url,data=values,verify=False)
+        headers = page.headers
+        page_content = page.content
+        page_url = page.url
+        bsobj = get_bsobj(page_content)
         divs = get_divs(bsobj)
 
         if divs is not None:
@@ -172,6 +179,7 @@ def main():
                 info = collect_info(i)
                 if info is not None:
                     all_events.append(info)
+        print(f"=> Finished scraping page {page_num+1}")
 
         write_to_csv(all_events)
 
